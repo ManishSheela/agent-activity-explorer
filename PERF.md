@@ -33,3 +33,30 @@ Problems are ordered by impact on the user, highest first.
 
   Note: in the after run FCP (1.1 s vs 0.7 s) and Speed Index (1.7 s vs 0.9 s) came out higher. I think this is run-to-run noise, since nothing in this fix touches them.
 
+
+### 2. Render-blocking CSS and JS in the head
+- **Symptom:** the page shows nothing for a moment while the browser downloads a big CSS file and runs a script, even though the page only needs a small stylesheet.
+- **How I found it:** Lighthouse "Render-blocking requests" insight (est. savings 510 ms). It listed three blocking requests. I also searched `theme.css` for the classes the page really uses (from `index.html` and `app.js`) and found none of them in it.
+- **Root cause:** `theme.css` is a 327 KB utility-class file (7,160 selectors) and nothing on the page uses it, but it was in the `<head>` so the browser had to download and parse it before painting. `config.js` is a normal script in the `<head>` too, and it builds 100,000 events, so it stopped the HTML parsing until it finished.
+- **Fix:**
+  - Removed `theme.css` from the page and deleted the file.
+  - Added `defer` to `config.js` and `app.js` (both in the head), so they download in parallel and run after the HTML is parsed, in order.
+- **Before / after:**
+
+  | Render-blocking requests | Before | After |
+  |---|---|---|
+  | `theme.css` | 319.4 KiB, 530 ms | removed |
+  | `config.js` | 5.3 KiB, 250 ms | not blocking (deferred) |
+  | `app.css` | 5.5 KiB, 250 ms | 5.5 KiB, 210 ms (still needed to paint) |
+  | Total | 330.2 KiB, 1,030 ms | 5.5 KiB, 210 ms |
+  | Lighthouse est. savings | 510 ms | 200 ms |
+
+  Before:
+
+  ![Render-blocking requests before: theme.css, config.js and app.css, 330.2 KiB, 1,030 ms](perf-screenshots/02-render-blocking-before.jpg)
+
+  After:
+
+  ![Render-blocking requests after: only app.css, 5.5 KiB, 210 ms](perf-screenshots/02-render-blocking-after.jpg)
+
+  Note: Lighthouse TBT went from 0 ms to 350 ms after this change, and the score went from 93 to 82 in one run. This is a side effect of `defer`.
