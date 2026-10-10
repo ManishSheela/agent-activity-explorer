@@ -11,8 +11,6 @@ const tickerToggle = document.getElementById('ticker-toggle');
 const preview = document.getElementById('row-preview');
 const scrollContext = document.getElementById('scroll-context');
 
-const minCardHeight = 220;
-
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -47,22 +45,6 @@ function renderAgents() {
       '</article>'
     );
   }).join('');
-  grid.querySelectorAll('img').forEach((img) => img.addEventListener('load', equalizeCardHeights));
-}
-
-function equalizeCardHeights() {
-  const cards = grid.querySelectorAll('.agent-card');
-  cards.forEach((card) => {
-    card.style.height = '';
-    const rowTop = card.offsetTop;
-    let tallest = Math.max(card.offsetHeight, minCardHeight);
-    cards.forEach((other) => {
-      if (other.offsetTop === rowTop) {
-        tallest = Math.max(tallest, other.offsetHeight);
-      }
-    });
-    card.style.height = tallest + 'px';
-  });
 }
 
 function loadViewed() {
@@ -115,15 +97,17 @@ function renderResults(query) {
   rememberViewed(page);
 }
 
+
 function fitSummaries() {
-  resultsList.querySelectorAll('.result-summary').forEach((cell) => {
-    let size = 14;
-    cell.style.fontSize = size + 'px';
-    while (cell.scrollWidth > cell.clientWidth && size > 11) {
-      size -= 0.5;
-      cell.style.fontSize = size + 'px';
-    }
-  });
+  let size = 14;
+  let cells = Array.from(resultsList.querySelectorAll('.result-summary'));
+  cells.forEach((cell) => (cell.style.fontSize = size + 'px'));
+  while (size > 11) {
+    cells = cells.filter((cell) => cell.scrollWidth > cell.clientWidth);
+    if (cells.length === 0) break;
+    size -= 0.5;
+    cells.forEach((cell) => (cell.style.fontSize = size + 'px'));
+  }
 }
 
 function onScroll() {
@@ -226,7 +210,6 @@ searchInput.addEventListener('input', () => {
   searchTimer = setTimeout(() => renderResults(searchInput.value), 150);
 });
 window.addEventListener('scroll', onScroll);
-window.addEventListener('resize', equalizeCardHeights);
 window.addEventListener('resize', fitSummaries);
 resultsList.addEventListener('mousemove', showPreview);
 resultsList.addEventListener('mouseleave', hidePreview);
@@ -236,5 +219,4 @@ backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 's
 tickerToggle.addEventListener('click', () => (tickerPanel ? closeTicker() : openTicker()));
 
 renderAgents();
-equalizeCardHeights();
 renderResults('');

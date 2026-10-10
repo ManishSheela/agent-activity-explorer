@@ -116,3 +116,26 @@ Problems are ordered by impact on the user, highest first.
   ![Typing after](perf-screenshots/04-search-after-typing.jpg)
 
   Note: some red and purple blocks are still there after the fix. That is `fitSummaries` and the `localStorage` writes, which are not fixed yet.
+
+### 5. Forced reflow when the page loads
+- **Symptom:** the page spends extra time on layout when it loads and after every search, so the list shows up later than it should.
+- **How I found it:** DevTools Performance panel, "Forced reflow" insight, on a page reload. It showed 128 ms total reflow time, caused by two places in `app.js`: line 57 (`card.offsetTop`) and line 122 (`cell.scrollWidth`). In the flame chart there are hundreds of tiny red Layout blocks under `fitSummaries`.
+- **Root cause:** the code changes a style and then reads a size (`scrollWidth`, `offsetTop`) inside a loop. Each read makes the browser recalculate the layout right away. `fitSummaries` did this for each of the 200 rows, and `equalizeCardHeights` did it for each agent card (and ran again after every image load).
+- **Fix:**
+  - `fitSummaries`: first set the font size of all cells, then read all the widths together, then shrink only the cells that still don't fit. It repeats this at most 7 times (14px down to 11px), not once per cell.
+  - `equalizeCardHeights`: removed the JavaScript. The grid now stretches the cards in a row to the same height by itself, and `min-height: 220px` on the card keeps the old minimum.
+- **Before / after:**
+
+  | | Before | After |
+  |---|---|---|
+  | Forced reflow, total | 128 ms | 35 ms |
+  | Places that trigger it | 2 (`app.js:57`, `app.js:122`) | 1 (`app.js:108`) |
+  | Rendering (selected range) | 128 ms | 44 ms |
+  | Total in selected range | 188 ms | 75 ms |
+
+  Before and after:
+
+  ![Forced reflow before](perf-screenshots/05-reflow-before.jpg)
+  ![Forced reflow after](perf-screenshots/05-reflow-after.jpg)
+
+  Note: the selected ranges are not the same (511 to 699 ms before, 515 to 590 ms after), so the reflow total is the safer number to compare. The reflow is still split into a few chunks, one per font size step, because the code has to measure after each shrink.
