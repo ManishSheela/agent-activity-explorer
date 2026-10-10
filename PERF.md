@@ -83,3 +83,36 @@ Problems are ordered by impact on the user, highest first.
 
   ![After the fix: the Font display insight is no longer listed](perf-screenshots/03-font-after.jpg)
 
+### 4. Search is slow and freezes the page
+- **Symptom:** when I type in the search box the page freezes and the letters show late. The first load is also slow.
+- **How I found it:** DevTools Performance panel. I recorded a page reload and also typing `billing`. Both show long red tasks with `renderResults` and `search` inside.
+- **Root cause:** every search sorted all 100,000 events using `new Date(...)` inside the sort, and it turned every event into text again. This ran on load and on every key press, with no waiting between keys.
+- **Fix:**
+  - Sort the events only once, comparing the timestamp strings directly (no `Date`).
+  - Build the search text only once and reuse it.
+  - Wait 150 ms after the last key before searching (debounce).
+- **Before / after:**
+
+  | | Before | After |
+  |---|---|---|
+  | Typing `billing`: INP | 1,595 ms | 335 ms |
+  | Typing `billing`: busy time in the selected range | 2,699 ms | 1,484 ms |
+  | Typing `billing`: long tasks | 3 (several key presses each) | 2 (one per pause) |
+  | Typing `billing`: Scripting / Rendering | not recorded | 258 ms / 307 ms |
+  | Page load: LCP | 1.39 s | 0.78 s |
+  | Page load: Scripting (recorded range) | 803 ms (0 to 1.56 s) | 182 ms (330 to 850 ms) |
+  | Page load: Rendering (recorded range) | 180 ms | 151 ms |
+  | Search run on load, `search("")` (Node test) | 688 ms | 0 ms (the 48 ms sort now happens once) |
+  | One search for `billing` (Node test) | 65 ms | 9 ms (about 80 ms the first time only) |
+
+  Page load, before and after:
+
+  ![Page load before](perf-screenshots/04-search-before-load.jpg)
+  ![Page load after](perf-screenshots/04-search-after-load.jpg)
+
+  Typing `billing`, before and after:
+
+  ![Typing before](perf-screenshots/04-search-before-typing.jpg)
+  ![Typing after](perf-screenshots/04-search-after-typing.jpg)
+
+  Note: some red and purple blocks are still there after the fix. That is `fitSummaries` and the `localStorage` writes, which are not fixed yet.
