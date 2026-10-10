@@ -79,11 +79,17 @@ function rememberViewed(items) {
   }
 }
 
+const newestFirst = window.ACTIVITY.slice().sort((a, b) =>
+  a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0
+);
+
+let searchText;
+
 function search(query) {
   const needle = query.trim().toLowerCase();
-  return window.ACTIVITY
-    .filter((event) => JSON.stringify(event).toLowerCase().includes(needle))
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  if (!needle) return newestFirst;
+  searchText ??= newestFirst.map((event) => JSON.stringify(event).toLowerCase());
+  return newestFirst.filter((_, index) => searchText[index].includes(needle));
 }
 
 function renderResults(query) {
@@ -214,7 +220,11 @@ function closeTicker() {
   tickerToggle.textContent = 'Show live calls';
 }
 
-searchInput.addEventListener('input', () => renderResults(searchInput.value));
+let searchTimer = null;
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => renderResults(searchInput.value), 150);
+});
 window.addEventListener('scroll', onScroll);
 window.addEventListener('resize', equalizeCardHeights);
 window.addEventListener('resize', fitSummaries);
