@@ -138,4 +138,22 @@ Problems are ordered by impact on the user, highest first.
   ![Forced reflow before](perf-screenshots/05-reflow-before.jpg)
   ![Forced reflow after](perf-screenshots/05-reflow-after.jpg)
 
-  Note: the selected ranges are not the same (511 to 699 ms before, 515 to 590 ms after), so the reflow total is the safer number to compare. The reflow is still split into a few chunks, one per font size step, because the code has to measure after each shrink.
+### 6. Scrolling the list is janky
+- **Symptom:** scrolling the list stutters, and the highlighted row lags behind.
+- **How I found it:** DevTools Performance panel, recording while scrolling. The Main row was full of long `onScroll` tasks, frames were mostly yellow, and there were hundreds of `background-color` animations.
+- **Root cause:** `onScroll` ran on every scroll event. For each of the 200 rows it changed a class (write) and then read its position (read), then the next row did the same: write, read, write, read... This is layout thrashing: every read after a write makes the browser redo the layout, so one scroll event caused up to 200 layouts. It also searched all 100,000 events on every scroll. The row background transition kept restarting, so rows were repainted all the time.
+- **Fix:**
+  - Run the scroll work once per frame (`requestAnimationFrame`).
+  - Fix the layout thrashing: read all row positions first, then do all the writes (read, read, read... then write, write, write...). Now the browser does only one layout per frame. Also only the rows that really change are touched.
+  - Count calls per minute once and look it up.
+  - CSS: removed the row background transition, and used `box-shadow` for the blue bar instead of border and padding.
+- **Before / after:**
+
+  | | Before | After |
+  |---|---|---|
+  | Long tasks while scrolling | back-to-back, about 55 to 60 ms each | none |
+  | Frames | mostly yellow | mostly green |
+  | `background-color` animations | hundreds | almost none |
+
+  ![Scroll before](perf-screenshots/06-scroll-before.jpg)
+  ![Scroll after](perf-screenshots/06-scroll-after.jpg)

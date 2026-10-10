@@ -242,12 +242,10 @@ main {
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   font-size: 14px;
-  transition: background 0.15s;
 }
 
 .result-row.in-focus {
-  padding-left: 13px;
-  border-left: 3px solid var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
   background: var(--surface-raised);
 }
 

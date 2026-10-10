@@ -110,27 +110,62 @@ function fitSummaries() {
   }
 }
 
+let callsPerMinute = null;
+
+function countCallsPerMinute() {
+  if (!callsPerMinute) {
+    callsPerMinute = new Map();
+    for (const event of window.ACTIVITY) {
+      const minute = event.timestamp.slice(11, 16);
+      callsPerMinute.set(minute, (callsPerMinute.get(minute) || 0) + 1);
+    }
+  }
+  return callsPerMinute;
+}
+
+let scrollFrame = 0;
+
 function onScroll() {
+  if (scrollFrame) return;
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = 0;
+    updateOnScroll();
+  });
+}
+
+let lastPadding = '';
+let lastContext = '';
+
+function updateOnScroll() {
   const scrolled = window.scrollY;
-  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const viewport = window.innerHeight;
+  const max = document.documentElement.scrollHeight - viewport;
+  const rows = Array.from(resultsList.querySelectorAll('.result-row'));
+  const inFocus = rows.map((row) => {
+    const top = row.getBoundingClientRect().top;
+    return top > viewport * 0.3 && top < viewport * 0.6;
+  });
+
   progress.style.width = (max > 0 ? (scrolled / max) * 100 : 0) + '%';
   topbar.classList.toggle('topbar-raised', scrolled > 8);
-  topbar.style.paddingBlock = Math.max(6, 12 - scrolled / 20) + 'px';
-  backToTop.classList.toggle('visible', scrolled > window.innerHeight);
-  resultsList.querySelectorAll('.result-row').forEach((row) => {
-    row.classList.remove('in-focus');
-    const rect = row.getBoundingClientRect();
-    if (rect.top > window.innerHeight * 0.3 && rect.top < window.innerHeight * 0.6) {
-      row.classList.add('in-focus');
-    }
-  });
-  const focused = resultsList.querySelector('.in-focus');
+  const padding = Math.max(6, 12 - scrolled / 20) + 'px';
+  if (padding !== lastPadding) {
+    topbar.style.paddingBlock = padding;
+    lastPadding = padding;
+  }
+  backToTop.classList.toggle('visible', scrolled > viewport);
+  
+  rows.forEach((row, index) => row.classList.toggle('in-focus', inFocus[index]));
+
+  const focused = rows[inFocus.indexOf(true)];
+  let context = '';
   if (focused) {
     const minute = focused.dataset.minute;
-    const sameMinute = window.ACTIVITY.filter((event) => new Date(event.timestamp).toISOString().slice(11, 16) === minute).length;
-    scrollContext.textContent = minute + ' UTC · ' + sameMinute + ' calls that minute';
-  } else {
-    scrollContext.textContent = '';
+    context = minute + ' UTC · ' + (countCallsPerMinute().get(minute) || 0) + ' calls that minute';
+  }
+  if (context !== lastContext) {
+    scrollContext.textContent = context;
+    lastContext = context;
   }
 }
 
