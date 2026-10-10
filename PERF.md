@@ -60,3 +60,26 @@ Problems are ordered by impact on the user, highest first.
   ![Render-blocking requests after: only app.css, 5.5 KiB, 210 ms](perf-screenshots/02-render-blocking-after.jpg)
 
   Note: Lighthouse TBT went from 0 ms to 350 ms after this change, and the score went from 93 to 82 in one run. This is a side effect of `defer`.
+
+### 3. font display Optimization
+- **Symptom:** for a short moment the page text is invisible, because the browser waits for the custom font before it draws the words.
+- **How I found it:** Lighthouse "Font display" insight, est. savings 300 ms, with `ibm-plex-sans.woff2` as the only item. Lighthouse also lists the web font under "Layout shift culprits".
+- **Root cause:** the font is only mentioned inside `app.css`, so the browser finds out about it late, after the CSS is downloaded and parsed. The `@font-face` also had no `font-display`, so the default behaviour hides the text until the font arrives.
+- **Fix:**
+  - Added `font-display: swap` to the `@font-face`, so text shows right away in a fallback font and swaps to IBM Plex Sans when it is loaded.
+  - Added `<link rel="preload" as="font" type="font/woff2" crossorigin>` for the font in `index.html`, so it starts downloading together with the CSS. `crossorigin` is needed for font preloads, otherwise the file is fetched twice.
+- **Before / after:**
+
+  | | Before | After |
+  |---|---|---|
+  | Lighthouse "Font display" est. savings | 300 ms (`ibm-plex-sans.woff2`) | insight gone |
+  | CLS | 0 | 0 |
+
+  Before:
+
+  ![Font display insight before: est. savings 300 ms for ibm-plex-sans.woff2](perf-screenshots/03-font-before.jpg)
+
+  After:
+
+  ![After the fix: the Font display insight is no longer listed](perf-screenshots/03-font-after.jpg)
+
