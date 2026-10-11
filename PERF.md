@@ -172,3 +172,17 @@ Problems are ordered by impact on the user, highest first.
 
   ![Ticker before](perf-screenshots/07-ticker-before.jpg)
   ![Ticker after](perf-screenshots/07-ticker-after.jpg)
+
+### 8. Alerts strip animation uses `left` (keeps the CPU busy)
+- **Symptom:** even when I do nothing, the page uses 13% to 32% of the CPU.
+- **How I found it:** I found in the code that the alerts strip is animated with `left`. I already knew that this property triggers reflow, so I checked the CPU usage in the Performance monitor on an idle page.
+- **Root cause:** animating `left` makes the browser redo layout and paint on every frame, forever.
+- **Fix:** animate `transform: translateX(...)` in the keyframes instead of `left`. I also added `prefers-reduced-motion` to stop the animation.
+- **Before / after:**
+
+  | | Before | After |
+  |---|---|---|
+  | CPU usage when idle | 13% to 32% | 0.2% |
+
+  ![Alerts before](perf-screenshots/08-alerts-before.jpg)
+  ![Alerts after](perf-screenshots/08-alerts-after.jpg)
