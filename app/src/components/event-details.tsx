@@ -6,6 +6,7 @@ import { JsonBlock } from '@/components/json-block'
 import { StatusBadge } from '@/components/status-badge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SlowNotice } from '@/components/slow-notice'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEvent } from '@/hooks/use-events'
 import { formatLatency } from '@/lib/utils'
@@ -16,7 +17,7 @@ interface EventDetailsProps {
 }
 
 export function EventDetails({ id, onClose }: EventDetailsProps) {
-  const { data: event, isPending, isError, error, refetch } = useEvent(id)
+  const { data: event, isPending, isFetching, isError, error, refetch } = useEvent(id)
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -51,6 +52,8 @@ export function EventDetails({ id, onClose }: EventDetailsProps) {
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+        <SlowNotice loading={isFetching} className="text-center" />
+
         {isPending && (
           <>
             <Skeleton className="h-44 w-full" />

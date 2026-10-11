@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils'
 import type { EventFilters } from '@/types/event'
 import { EventRow } from './event-row'
 import { EventsTableEmpty } from './events-table-empty'
-import { EventsTableFooter } from './events-table-footer'
 import { EventsTableSkeleton } from './events-table-skeleton'
+import { SlowNotice } from './slow-notice'
 
 const COLUMNS = ['Timestamp (UTC)', 'Agent', 'Tool', 'Status', 'Latency', '']
 const ROW_HEIGHT = 48
@@ -64,14 +64,10 @@ export function EventsTable({ filters, selectedId, onSelect }: EventsTableProps)
           </TableBody>
         </Table>
       </div>
-      <EventsTableFooter
-        shown={events.length}
-        total={query.data?.pages[0].total}
-        hasNextPage={query.hasNextPage}
-        isLoadingMore={query.isFetchingNextPage}
-        error={query.isFetchNextPageError ? query.error.message : null}
-        onLoadMore={query.fetchNextPage}
-      />
+      <SlowNotice loading={query.isFetching} className="border-t bg-muted/40 px-4 py-2" />
+      {query.isFetchNextPageError && (
+        <ErrorState message={query.error.message} onRetry={query.fetchNextPage} className="rounded-none border-0 border-t p-4" />
+      )}
     </div>
   )
 }
