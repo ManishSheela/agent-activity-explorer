@@ -8,7 +8,7 @@ import { useSelectedEvent } from '@/hooks/use-selected-event'
 const EventDetails = lazy(() => import('@/components/event-details').then((module) => ({ default: module.EventDetails })))
 
 export default function App() {
-  const { filters, setFilters, clearFilters } = useEventFilters()
+  const { filters, hasFilters, setFilters, clearFilters } = useEventFilters()
   const { selectedId, selectEvent } = useSelectedEvent()
 
   return (
@@ -21,10 +21,10 @@ export default function App() {
             <p className="mt-1 text-sm text-muted-foreground">Explore and debug AI agent activity across all systems.</p>
           </div>
           <div className="mt-6">
-            <EventsFilters filters={filters} onChange={setFilters} onClear={clearFilters} />
+            <EventsFilters filters={filters} hasFilters={hasFilters} onChange={setFilters} onClear={clearFilters} />
           </div>
           <div className="mt-4 flex min-h-0 flex-1 flex-col">
-            <EventsTable filters={filters} selectedId={selectedId} onSelect={selectEvent} />
+            <EventsTable filters={filters} hasFilters={hasFilters} selectedId={selectedId} onSelect={selectEvent} onClear={clearFilters} />
           </div>
         </main>
         {selectedId && (

@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { ErrorState } from '@/components/error-state'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -35,7 +36,7 @@ export function AgentFilter({ selected, onChange }: AgentFilterProps) {
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-80 w-64 overflow-y-auto p-2">
         {agents.isPending && <p className="px-2 py-1.5 text-sm text-muted-foreground">Loading agents…</p>}
-        {agents.isError && <p className="px-2 py-1.5 text-sm text-destructive">Could not load agents.</p>}
+        {agents.isError && <ErrorState message={agents.error.message} onRetry={agents.refetch} className="border-0 p-2" />}
         {agents.data?.map((agent) => (
           <label key={agent} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent">
             <Checkbox checked={selected.includes(agent)} onCheckedChange={() => toggle(agent)} />

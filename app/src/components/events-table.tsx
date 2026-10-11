@@ -14,11 +14,13 @@ const ROW_HEIGHT = 48
 
 interface EventsTableProps {
   filters: EventFilters
+  hasFilters: boolean
   selectedId: string | null
   onSelect: (id: string) => void
+  onClear: () => void
 }
 
-export function EventsTable({ filters, selectedId, onSelect }: EventsTableProps) {
+export function EventsTable({ filters, hasFilters, selectedId, onSelect, onClear }: EventsTableProps) {
   const query = useEvents(filters)
   const events = query.data?.pages.flatMap((page) => page.items) ?? []
   const { start, end, paddingTop, paddingBottom, onScroll } = useInfiniteScroll({
@@ -47,7 +49,7 @@ export function EventsTable({ filters, selectedId, onSelect }: EventsTableProps)
           </TableHeader>
           <TableBody>
             {query.isPending && <EventsTableSkeleton columns={COLUMNS.length} />}
-            {query.isSuccess && events.length === 0 && <EventsTableEmpty columns={COLUMNS.length} />}
+            {query.isSuccess && events.length === 0 && <EventsTableEmpty columns={COLUMNS.length} hasFilters={hasFilters} onClear={onClear} />}
             {paddingTop > 0 && (
               <tr aria-hidden>
                 <td colSpan={COLUMNS.length} style={{ height: paddingTop }} />

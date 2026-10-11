@@ -11,6 +11,8 @@ export function useEventFilters() {
     status: STATUSES.includes(status as Status) ? (status as Status) : null,
   }
 
+  const hasFilters = filters.q !== '' || filters.agents.length > 0 || filters.status !== null
+
   function setFilters(changes: Partial<EventFilters>) {
     const next = { ...filters, ...changes }
     const search = new URLSearchParams(params)
@@ -27,5 +29,5 @@ export function useEventFilters() {
     setFilters({ q: '', agents: [], status: null })
   }
 
-  return { filters, setFilters, clearFilters }
+  return { filters, hasFilters, setFilters, clearFilters }
 }

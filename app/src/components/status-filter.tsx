@@ -17,7 +17,7 @@ export function StatusFilter({ value, onChange }: StatusFilterProps) {
           <SelectValue />
         </span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent position="popper" align="start">
         <SelectItem value={ALL}>All statuses</SelectItem>
         {STATUSES.map((status) => (
           <SelectItem key={status} value={status}>

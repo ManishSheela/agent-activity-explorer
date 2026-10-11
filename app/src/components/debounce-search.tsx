@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
-interface SearchInputProps {
+interface DebounceSearchProps {
   value: string
   onSearch: (value: string) => void
 }
 
-export function SearchInput({ value, onSearch }: SearchInputProps) {
+export function DebounceSearch({ value, onSearch }: DebounceSearchProps) {
   const [text, setText] = useState(value)
 
   useEffect(() => {
