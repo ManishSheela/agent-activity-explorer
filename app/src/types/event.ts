@@ -2,6 +2,12 @@ export const STATUSES = ['ok', 'blocked', 'error'] as const
 
 export type Status = (typeof STATUSES)[number]
 
+export const STATUS_LABELS: Record<Status, string> = {
+  ok: 'OK',
+  blocked: 'Blocked',
+  error: 'Error',
+}
+
 export interface EventSummary {
   id: string
   timestamp: string
@@ -18,13 +24,7 @@ export interface EventsPage {
   total: number
 }
 
-export interface EventDetail {
-  id: string
-  timestamp: string
-  agent: string
-  tool: string
-  status: Status
-  latencyMs: number
+export interface EventDetail extends Omit<EventSummary, 'argsPreview'> {
   args: unknown
   result: unknown
   policyMatches: string[]

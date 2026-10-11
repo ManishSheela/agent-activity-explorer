@@ -1,7 +1,32 @@
+import { AppHeader } from '@/components/app-header'
+import { EventDetails } from '@/components/event-details'
+import { EventsFilters } from '@/components/events-filters'
+import { EventsTable } from '@/components/events-table'
+import { useEventFilters } from '@/hooks/use-event-filters'
+import { useSelectedEvent } from '@/hooks/use-selected-event'
+
 export default function App() {
+  const { filters, setFilters, clearFilters } = useEventFilters()
+  const { selectedId, selectEvent } = useSelectedEvent()
+
   return (
-    <main className="mx-auto max-w-6xl p-4">
-      <h1 className="text-2xl font-semibold">Agent Activity Explorer</h1>
-    </main>
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <AppHeader />
+      <div className="relative flex min-h-0 flex-1">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col px-6 pt-8 pb-6">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Agent Activity</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Explore and debug AI agent activity across all systems.</p>
+          </div>
+          <div className="mt-6">
+            <EventsFilters filters={filters} onChange={setFilters} onClear={clearFilters} />
+          </div>
+          <div className="mt-4 flex min-h-0 flex-1 flex-col">
+            <EventsTable filters={filters} selectedId={selectedId} onSelect={selectEvent} />
+          </div>
+        </main>
+        {selectedId && <EventDetails id={selectedId} onClose={() => selectEvent(null)} />}
+      </div>
+    </div>
   )
 }
