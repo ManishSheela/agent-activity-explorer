@@ -9,7 +9,14 @@ import { EventsTableEmpty } from './events-table-empty'
 import { EventsTableSkeleton } from './events-table-skeleton'
 import { SlowNotice } from './slow-notice'
 
-const COLUMNS = ['Timestamp (UTC)', 'Agent', 'Tool', 'Status', 'Latency', '']
+const COLUMNS = [
+  { name: 'Timestamp (UTC)', className: 'w-52' },
+  { name: 'Agent' },
+  { name: 'Tool' },
+  { name: 'Status', className: 'w-32' },
+  { name: 'Latency', className: 'w-32' },
+  { name: '', className: 'w-12' },
+]
 const ROW_HEIGHT = 48
 
 interface EventsTableProps {
@@ -36,20 +43,19 @@ export function EventsTable({ filters, hasFilters, selectedId, onSelect, onClear
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card">
-      <div onScroll={onScroll} className={cn('min-h-0 flex-1 overflow-auto transition-opacity', query.isPlaceholderData && 'opacity-60')}>
-        <Table aria-busy={query.isPending || query.isFetchingNextPage}>
+      <div onScroll={onScroll} className={cn('flex min-h-0 flex-1 flex-col overflow-auto transition-opacity', query.isPlaceholderData && 'opacity-60')}>
+        <Table className="min-w-[800px] table-fixed" aria-busy={query.isPending || query.isFetchingNextPage}>
           <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--border)]">
             <TableRow className="border-b-0 bg-muted/40 hover:bg-muted/40">
-              {COLUMNS.map((name) => (
-                <TableHead key={name} className="h-11 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {COLUMNS.map(({ name, className }) => (
+                <TableHead key={name} className={cn('h-11 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground', className)}>
                   {name}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {query.isPending && <EventsTableSkeleton columns={COLUMNS.length} />}
-            {query.isSuccess && events.length === 0 && <EventsTableEmpty columns={COLUMNS.length} hasFilters={hasFilters} onClear={onClear} />}
+            {query.isPending && <EventsTableSkeleton columns={COLUMNS.length} rows={Math.ceil(window.innerHeight / ROW_HEIGHT)} />}
             {paddingTop > 0 && (
               <tr aria-hidden>
                 <td colSpan={COLUMNS.length} style={{ height: paddingTop }} />
@@ -63,8 +69,10 @@ export function EventsTable({ filters, hasFilters, selectedId, onSelect, onClear
                 <td colSpan={COLUMNS.length} style={{ height: paddingBottom }} />
               </tr>
             )}
+            {query.isFetchingNextPage && <EventsTableSkeleton columns={COLUMNS.length} rows={3} />}
           </TableBody>
         </Table>
+        {query.isSuccess && events.length === 0 && <EventsTableEmpty hasFilters={hasFilters} onClear={onClear} />}
       </div>
       <SlowNotice loading={query.isFetching} className="border-t bg-muted/40 px-4 py-2" />
       {query.isFetchNextPageError && (

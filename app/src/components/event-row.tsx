@@ -27,13 +27,13 @@ export function EventRow({ event, selected, onSelect }: EventRowProps) {
       className="h-12 cursor-pointer outline-none focus-visible:bg-muted/60 data-[state=selected]:bg-primary/10"
     >
       <TableCell className="px-4 tabular-nums">{formatTimestamp(event.timestamp)}</TableCell>
-      <TableCell className="px-4">{event.agent}</TableCell>
-      <TableCell className="px-4">{event.tool}</TableCell>
+      <TableCell className="truncate px-4">{event.agent}</TableCell>
+      <TableCell className="truncate px-4">{event.tool}</TableCell>
       <TableCell className="px-4">
         <StatusBadge status={event.status} />
       </TableCell>
       <TableCell className="px-4 tabular-nums">{formatLatency(event.latencyMs)}</TableCell>
-      <TableCell className="w-10 pr-4 text-muted-foreground">
+      <TableCell className="pr-4 text-muted-foreground">
         <ChevronRight className="size-4" />
       </TableCell>
     </TableRow>

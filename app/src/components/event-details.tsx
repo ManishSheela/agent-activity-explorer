@@ -52,7 +52,7 @@ export function EventDetails({ id, onClose }: EventDetailsProps) {
       </div>
 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
-        <SlowNotice loading={isFetching} className="text-center" />
+        <SlowNotice loading={isFetching} />
 
         {isPending && (
           <>
