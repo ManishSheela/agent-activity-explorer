@@ -157,3 +157,18 @@ Problems are ordered by impact on the user, highest first.
 
   ![Scroll before](perf-screenshots/06-scroll-before.jpg)
   ![Scroll after](perf-screenshots/06-scroll-after.jpg)
+
+### 7. Live ticker keeps running after it is closed (memory leak)
+- **Symptom:** after opening and closing "Show live calls", memory and DOM nodes keep growing, even with the ticker closed.
+- **How I found it:** I read the code and saw that `openTicker` starts a `setInterval` and adds listeners, but `closeTicker` never cleans them up. I confirmed it in the DevTools Performance monitor.
+- **Root cause:** the timer was never stopped, the `keydown` listener was never removed, and `renderedTickerRows` cached every row and never got smaller.
+- **Fix:** `clearInterval` and `removeEventListener` when closing, and removed the row cache.
+- **Before / after:**
+
+  | | Before | After |
+  |---|---|---|
+  | DOM nodes | 2,970, then 18,547 and growing | 3,121, flat |
+  | JS heap | growing about 184 kB/s | falling about 88 kB/s |
+
+  ![Ticker before](perf-screenshots/07-ticker-before.jpg)
+  ![Ticker after](perf-screenshots/07-ticker-after.jpg)
