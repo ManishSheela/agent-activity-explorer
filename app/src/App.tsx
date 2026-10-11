@@ -1,9 +1,11 @@
+import { lazy, Suspense } from 'react'
 import { AppHeader } from '@/components/app-header'
-import { EventDetails } from '@/components/event-details'
 import { EventsFilters } from '@/components/events-filters'
 import { EventsTable } from '@/components/events-table'
 import { useEventFilters } from '@/hooks/use-event-filters'
 import { useSelectedEvent } from '@/hooks/use-selected-event'
+
+const EventDetails = lazy(() => import('@/components/event-details').then((module) => ({ default: module.EventDetails })))
 
 export default function App() {
   const { filters, setFilters, clearFilters } = useEventFilters()
@@ -25,7 +27,11 @@ export default function App() {
             <EventsTable filters={filters} selectedId={selectedId} onSelect={selectEvent} />
           </div>
         </main>
-        {selectedId && <EventDetails id={selectedId} onClose={() => selectEvent(null)} />}
+        {selectedId && (
+          <Suspense fallback={null}>
+            <EventDetails id={selectedId} onClose={() => selectEvent(null)} />
+          </Suspense>
+        )}
       </div>
     </div>
   )
